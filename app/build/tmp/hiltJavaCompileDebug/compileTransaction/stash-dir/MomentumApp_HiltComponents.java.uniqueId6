@@ -6,7 +6,6 @@ import com.momentum.app.ui.habits.AddEditHabitViewModel_HiltModules;
 import com.momentum.app.ui.habits.HabitViewModel_HiltModules;
 import com.momentum.app.ui.insights.InsightsViewModel_HiltModules;
 import com.momentum.app.ui.onboarding.OnboardingViewModel_HiltModules;
-import com.momentum.app.ui.reflection.ReflectionHistoryViewModel_HiltModules;
 import com.momentum.app.ui.reflection.ReflectionViewModel_HiltModules;
 import com.momentum.app.ui.settings.SettingsViewModel_HiltModules;
 import com.momentum.app.ui.tasks.AddEditTaskViewModel_HiltModules;
@@ -175,7 +174,6 @@ public final class MomentumApp_HiltComponents {
           ActivityCBuilderModule.class,
           ViewModelCBuilderModule.class,
           OnboardingViewModel_HiltModules.KeyModule.class,
-          ReflectionHistoryViewModel_HiltModules.KeyModule.class,
           ReflectionViewModel_HiltModules.KeyModule.class,
           SettingsViewModel_HiltModules.KeyModule.class,
           TaskViewModel_HiltModules.KeyModule.class,
@@ -222,7 +220,6 @@ public final class MomentumApp_HiltComponents {
           HiltWrapper_HiltViewModelFactory_ViewModelModule.class,
           InsightsViewModel_HiltModules.BindsModule.class,
           OnboardingViewModel_HiltModules.BindsModule.class,
-          ReflectionHistoryViewModel_HiltModules.BindsModule.class,
           ReflectionViewModel_HiltModules.BindsModule.class,
           SettingsViewModel_HiltModules.BindsModule.class,
           TaskViewModel_HiltModules.BindsModule.class,

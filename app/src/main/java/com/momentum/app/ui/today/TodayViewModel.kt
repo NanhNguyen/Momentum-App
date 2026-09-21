@@ -20,7 +20,11 @@ data class TodayUiState(
     val bigThreeTotal: Int = 0,
     val showBigThreeLimitMessage: Boolean = false,
     val entertainmentMinutesToday: Int = 0,
-    val restMinutesToday: Int = 0
+    val restMinutesToday: Int = 0,
+    // "This week at a glance"
+    val weekConsistencyScore: Int = 0,
+    val weekTasksCompleted: Int = 0,
+    val weekBigThreeRate: Int = 0
 )
 
 @HiltViewModel
@@ -44,14 +48,30 @@ class TodayViewModel @Inject constructor(
             // Generate recurring tasks for today if not already generated
             taskRepository.generateRecurringTasksForDate(today)
 
-            // Combine big three tasks + habits + entertainment logs for today
-            combine(
+            val monday = today.with(java.time.DayOfWeek.MONDAY)
+            val sunday = today.with(java.time.DayOfWeek.SUNDAY)
+
+            val todayTasksFlow = combine(
                 taskRepository.getBigThreeForDate(today),
-                taskRepository.getTasksForDate(today),
+                taskRepository.getTasksForDate(today)
+            ) { b3, all -> b3 to all }
+
+            val todayOtherFlow = combine(
                 habitRepository.getAllHabits(),
                 habitRepository.getAllLogsForWeek(today, today),
                 entertainmentRepository.getLogsForDate(today)
-            ) { bigThree, allTasks, habits, logsToday, entertainmentLogsToday ->
+            ) { habits, logs, ent -> Triple(habits, logs, ent) }
+
+            val weekDataFlow = combine(
+                taskRepository.getTasksForWeek(monday, sunday),
+                habitRepository.getAllLogsForWeek(monday, sunday)
+            ) { weekTasks, weekLogs -> weekTasks to weekLogs }
+
+            combine(todayTasksFlow, todayOtherFlow, weekDataFlow) {
+                (bigThree, allTasks),
+                (habits, logsToday, entertainmentLogsToday),
+                (weekTasks, weekLogs) ->
+
                 val otherTasks = allTasks.filter { !it.isBigThree }
                 val habitPairs = habits.map { habit ->
                     val log = logsToday.firstOrNull { it.habitId == habit.id }
@@ -64,6 +84,21 @@ class TodayViewModel @Inject constructor(
                     .filter { it.category == EntertainmentCategory.REST }
                     .sumOf { it.durationMinutes }
 
+                // Calculate weekly at a glance
+                val weekTasksDone = weekTasks.count { it.isCompleted }
+                val weekB3 = weekTasks.filter { it.isBigThree }
+                val weekB3Rate = if (weekB3.isNotEmpty()) (weekB3.count { it.isCompleted } * 100 / weekB3.size) else 0
+
+                val weekConsistency = if (habits.isNotEmpty()) {
+                    val scores = habits.map { habit ->
+                        val logsForHabit = weekLogs.filter { it.habitId == habit.id }
+                        val completedDays = logsForHabit.count { it.status == HabitStatus.DONE }
+                        val target = habit.frequencyPerWeek.coerceAtLeast(1)
+                        ((completedDays.toFloat() / target) * 100f).toInt().coerceIn(0, 100)
+                    }
+                    scores.average().toInt()
+                } else 0
+
                 TodayUiState(
                     greeting = buildGreeting(),
                     bigThree = bigThree,
@@ -73,7 +108,10 @@ class TodayViewModel @Inject constructor(
                     bigThreeTotal = bigThree.size,
                     showBigThreeLimitMessage = false,
                     entertainmentMinutesToday = entMinutes,
-                    restMinutesToday = restMinutes
+                    restMinutesToday = restMinutes,
+                    weekConsistencyScore = weekConsistency,
+                    weekTasksCompleted = weekTasksDone,
+                    weekBigThreeRate = weekB3Rate
                 )
             }.collect { state ->
                 _uiState.value = state

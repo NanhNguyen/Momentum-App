@@ -72,7 +72,7 @@ fun HabitsScreen(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
-                            Column {
+                            Column(modifier = Modifier.weight(1f)) {
                                 Text(
                                     "This Week's Consistency",
                                     style = MaterialTheme.typography.titleMedium,
@@ -91,15 +91,9 @@ fun HabitsScreen(
                                     color = OnSurfaceSubtle
                                 )
                             }
-                            Text(
-                                "${uiState.overallConsistency}%",
-                                style = MaterialTheme.typography.headlineMedium,
-                                color = SageGreen,
-                                fontWeight = FontWeight.Bold
-                            )
+                            Spacer(Modifier.width(16.dp))
+                            CircularConsistencyRing(percentage = uiState.overallConsistency)
                         }
-                        Spacer(Modifier.height(12.dp))
-                        MomentumProgressBar(progress = uiState.overallConsistency / 100f)
                     }
                 }
 

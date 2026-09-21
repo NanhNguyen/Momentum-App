@@ -1,7 +1,10 @@
 package com.momentum.app.ui.components
 
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.*
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -15,9 +18,17 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.momentum.app.domain.model.*
@@ -83,12 +94,14 @@ fun HabitDayCell(
     modifier: Modifier = Modifier
 ) {
     val dayLabel = day.getDisplayName(TextStyle.NARROW, Locale.getDefault())
-    val (bgColor, icon, iconTint) = when {
-        isFuture -> Triple(StatePending, null, Color.Transparent)
-        log?.status == HabitStatus.DONE -> Triple(SageGreenContainer, Icons.Filled.Check, SageGreen)
-        log?.status == HabitStatus.MISSED -> Triple(SurfaceContainerHighest, Icons.Filled.Remove, StateMissed)
-        else -> Triple(StatePending, null, Color.Transparent)
-    }
+    val haptic = LocalHapticFeedback.current
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val cellScale by animateFloatAsState(
+        targetValue = if (isPressed) 0.88f else 1f,
+        animationSpec = spring(stiffness = Spring.StiffnessMedium),
+        label = "cell_press_scale"
+    )
 
     Column(
         modifier = modifier,
@@ -103,22 +116,65 @@ fun HabitDayCell(
         Box(
             modifier = Modifier
                 .sizeIn(minWidth = 44.dp, minHeight = 44.dp)
-                .clickable(enabled = !isFuture) { onClick() },
+                .scale(cellScale)
+                .clickable(
+                    interactionSource = interactionSource,
+                    indication = ripple(bounded = false, radius = 22.dp),
+                    enabled = !isFuture
+                ) {
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    onClick()
+                },
             contentAlignment = Alignment.Center
         ) {
-            Box(
-                modifier = Modifier
-                    .size(32.dp)
-                    .clip(CircleShape)
-                    .background(bgColor),
-                contentAlignment = Alignment.Center
-            ) {
-                if (icon != null) {
-                    Icon(
-                        imageVector = icon,
-                        contentDescription = log?.status?.name ?: "Habit status",
-                        modifier = Modifier.size(16.dp),
-                        tint = iconTint
+            val isDone = !isFuture && log?.status == HabitStatus.DONE
+            val isMissed = !isFuture && log?.status == HabitStatus.MISSED
+
+            when {
+                isDone -> {
+                    // Done: filled with sage tone + small checkmark icon
+                    Box(
+                        modifier = Modifier
+                            .size(32.dp)
+                            .clip(CircleShape)
+                            .background(SageGreen),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.Check,
+                            contentDescription = "Done",
+                            modifier = Modifier.size(16.dp),
+                            tint = Background
+                        )
+                    }
+                }
+                isMissed -> {
+                    // Missed: neutral gray outline with a thin diagonal line through it (not filled)
+                    Box(
+                        modifier = Modifier
+                            .size(32.dp)
+                            .clip(CircleShape)
+                            .border(1.5.dp, StateMissed, CircleShape),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Canvas(modifier = Modifier.size(14.dp)) {
+                            drawLine(
+                                color = StateMissed,
+                                start = Offset(0f, size.height),
+                                end = Offset(size.width, 0f),
+                                strokeWidth = 1.5.dp.toPx(),
+                                cap = StrokeCap.Round
+                            )
+                        }
+                    }
+                }
+                else -> {
+                    // Pending / not-yet-due: muted dark fill, no icon
+                    Box(
+                        modifier = Modifier
+                            .size(32.dp)
+                            .clip(CircleShape)
+                            .background(if (isFuture) StatePending else SurfaceContainerHighest)
                     )
                 }
             }
@@ -167,13 +223,19 @@ fun MoodPicker(
     ) {
         Mood.entries.forEach { mood ->
             val isSelected = mood == selectedMood
+            val (moodAccent, moodContainer) = when (mood) {
+                Mood.DIFFICULT -> MoodDifficult to MoodDifficultContainer
+                Mood.NEUTRAL -> MoodNeutral to MoodNeutralContainer
+                Mood.GOOD -> MoodGood to MoodGoodContainer
+                Mood.GREAT -> MoodGreat to MoodGreatContainer
+            }
             Box(
                 modifier = Modifier
                     .clip(RoundedCornerShape(12.dp))
-                    .background(if (isSelected) SageGreenContainer else Color.Transparent)
+                    .background(if (isSelected) moodContainer else Color.Transparent)
                     .border(
                         width = if (isSelected) 1.dp else 0.dp,
-                        color = if (isSelected) SageGreen else Color.Transparent,
+                        color = if (isSelected) moodAccent else Color.Transparent,
                         shape = RoundedCornerShape(12.dp)
                     )
                     .clickable { onMoodSelect(mood) }
@@ -185,13 +247,13 @@ fun MoodPicker(
                         imageVector = mood.icon,
                         contentDescription = mood.label,
                         modifier = Modifier.size(32.dp),
-                        tint = if (isSelected) SageGreen else OnSurfaceSubtle
+                        tint = if (isSelected) moodAccent else OnSurfaceSubtle
                     )
                     Spacer(Modifier.height(4.dp))
                     Text(
                         text = mood.label,
                         style = MaterialTheme.typography.labelSmall,
-                        color = if (isSelected) SageGreen else OnSurfaceSubtle
+                        color = if (isSelected) moodAccent else OnSurfaceSubtle
                     )
                 }
             }
@@ -243,6 +305,22 @@ fun TaskItemRow(
     onToggleComplete: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val haptic = LocalHapticFeedback.current
+    val checkboxScale = remember { Animatable(1f) }
+
+    LaunchedEffect(task.isCompleted) {
+        if (task.isCompleted) {
+            checkboxScale.animateTo(1.22f, tween(100))
+            checkboxScale.animateTo(1f, spring(stiffness = Spring.StiffnessMediumLow))
+        }
+    }
+
+    val textColor by animateColorAsState(
+        targetValue = if (task.isCompleted) OnSurfaceSubtle else OnSurface,
+        animationSpec = tween(200),
+        label = "task_text_color"
+    )
+
     Row(
         modifier = modifier
             .fillMaxWidth()
@@ -254,12 +332,19 @@ fun TaskItemRow(
         Box(
             modifier = Modifier
                 .size(48.dp)
-                .clickable { onToggleComplete() },
+                .clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = ripple(bounded = false, radius = 24.dp)
+                ) {
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    onToggleComplete()
+                },
             contentAlignment = Alignment.Center
         ) {
             Box(
                 modifier = Modifier
                     .size(24.dp)
+                    .scale(checkboxScale.value)
                     .clip(CircleShape)
                     .border(
                         2.dp,
@@ -283,7 +368,7 @@ fun TaskItemRow(
             Text(
                 text = task.title,
                 style = MaterialTheme.typography.bodyLarge,
-                color = if (task.isCompleted) OnSurfaceSubtle else OnSurface,
+                color = textColor,
                 textDecoration = if (task.isCompleted) TextDecoration.LineThrough else null,
                 maxLines = 2
             )
@@ -306,6 +391,62 @@ fun TaskItemRow(
         }
         PriorityDot(task.priority)
         if (task.isBigThree) BigThreeBadge()
+    }
+}
+
+// ─────────────── Circular Consistency Ring ───────────────
+
+@Composable
+fun CircularConsistencyRing(
+    percentage: Int,
+    modifier: Modifier = Modifier,
+    size: Dp = 68.dp,
+    strokeWidth: Dp = 6.dp
+) {
+    val animatedProgress by animateFloatAsState(
+        targetValue = (percentage / 100f).coerceIn(0f, 1f),
+        animationSpec = tween(durationMillis = 600, easing = FastOutSlowInEasing),
+        label = "consistency_ring"
+    )
+
+    Box(
+        modifier = modifier.size(size),
+        contentAlignment = Alignment.Center
+    ) {
+        Canvas(modifier = Modifier.fillMaxSize()) {
+            val strokePx = strokeWidth.toPx()
+            val radius = (this.size.minDimension - strokePx) / 2
+            val centerOffset = center
+
+            // Background track
+            drawCircle(
+                color = SurfaceContainerHighest,
+                radius = radius,
+                center = centerOffset,
+                style = Stroke(width = strokePx)
+            )
+
+            // Animated progress arc
+            drawArc(
+                color = SageGreen,
+                startAngle = -90f,
+                sweepAngle = animatedProgress * 360f,
+                useCenter = false,
+                topLeft = Offset(centerOffset.x - radius, centerOffset.y - radius),
+                size = Size(radius * 2, radius * 2),
+                style = Stroke(
+                    width = strokePx,
+                    cap = StrokeCap.Round
+                )
+            )
+        }
+
+        Text(
+            text = "$percentage%",
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold,
+            color = SageGreen
+        )
     }
 }
 
