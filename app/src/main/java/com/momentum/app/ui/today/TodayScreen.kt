@@ -2,6 +2,7 @@ package com.momentum.app.ui.today
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.*
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -23,7 +24,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
@@ -48,6 +51,7 @@ fun TodayScreen(
     onNavigateToInsights: () -> Unit,
     onNavigateToBalance: () -> Unit,
     onNavigateToSettings: () -> Unit,
+    onNavigateToReflect: () -> Unit = {},
     viewModel: TodayViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -99,7 +103,7 @@ fun TodayScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp),
             contentPadding = PaddingValues(bottom = 24.dp)
         ) {
-            // Header
+            // Header with time-of-day adaptive greeting & secondary prompt
             item {
                 Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     Text(
@@ -115,7 +119,7 @@ fun TodayScreen(
                     )
                     Spacer(Modifier.height(4.dp))
                     Text(
-                        text = "What matters most today?",
+                        text = uiState.secondaryPrompt,
                         style = MaterialTheme.typography.bodyLarge,
                         color = OnSurfaceSubtle
                     )
@@ -132,7 +136,9 @@ fun TodayScreen(
                     ) {
                         SectionHeader(
                             title = "Your Big 3",
-                            subtitle = "${uiState.bigThreeCompleted} of ${uiState.bigThreeTotal} completed"
+                            subtitle = if (uiState.bigThreeTotal > 0)
+                                "${uiState.bigThreeCompleted} of ${uiState.bigThreeTotal} completed"
+                            else null
                         )
                         if (uiState.bigThreeTotal < 3) {
                             IconButton(
@@ -245,7 +251,83 @@ fun TodayScreen(
                 }
             }
 
-            // Life Balance Card (with interactive press feedback)
+            // Evening Reflection Nudge (visible during evening wind-down, minimal & skippable)
+            if (uiState.timeOfDay == TimeOfDay.EVENING) {
+                item {
+                    val reflectionInteraction = remember { MutableInteractionSource() }
+                    val reflectionPressed by reflectionInteraction.collectIsPressedAsState()
+                    val reflectionScale by animateFloatAsState(
+                        targetValue = if (reflectionPressed) 0.98f else 1f,
+                        animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
+                        label = "reflection_press_scale"
+                    )
+
+                    Surface(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .scale(reflectionScale)
+                            .clip(RoundedCornerShape(14.dp))
+                            .clickable(
+                                interactionSource = reflectionInteraction,
+                                indication = ripple(),
+                                onClick = onNavigateToReflect
+                            )
+                            .border(1.dp, SurfaceContainerHighest, RoundedCornerShape(14.dp)),
+                        shape = RoundedCornerShape(14.dp),
+                        color = SurfaceContainer
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .padding(horizontal = 16.dp, vertical = 14.dp)
+                                .fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(36.dp)
+                                        .clip(CircleShape)
+                                        .background(SageGreenContainer),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Outlined.AutoAwesome,
+                                        contentDescription = null,
+                                        tint = SageGreen,
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                }
+                                Column {
+                                    Text(
+                                        text = "Wind down & reflect",
+                                        style = MaterialTheme.typography.titleSmall,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = OnSurface
+                                    )
+                                    Text(
+                                        text = "Take a quiet minute to capture how today felt",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = OnSurfaceSubtle
+                                    )
+                                }
+                            }
+                            Icon(
+                                imageVector = Icons.Filled.ChevronRight,
+                                contentDescription = "Go to Reflection",
+                                tint = SageGreen,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+                    }
+                }
+            }
+
+            // Life Balance Card (wired to real today data with interactive press feedback)
             item {
                 val balanceInteraction = remember { MutableInteractionSource() }
                 val balancePressed by balanceInteraction.collectIsPressedAsState()
@@ -295,15 +377,16 @@ fun TodayScreen(
                                     fontWeight = FontWeight.SemiBold,
                                     color = OnSurface
                                 )
-                                val balanceSummary = when {
-                                    uiState.entertainmentMinutesToday > 0 && uiState.restMinutesToday > 0 ->
-                                        "${uiState.entertainmentMinutesToday}m play • ${uiState.restMinutesToday}m rest logged today"
-                                    uiState.entertainmentMinutesToday > 0 ->
-                                        "${uiState.entertainmentMinutesToday}m intentional entertainment today"
-                                    uiState.restMinutesToday > 0 ->
-                                        "${uiState.restMinutesToday}m intentional rest today"
-                                    else ->
-                                        "Track intentional leisure & rest"
+                                val balanceSummary = if (uiState.totalLeisureMinutesToday > 0) {
+                                    val total = uiState.totalLeisureMinutesToday
+                                    val hours = total / 60
+                                    val mins = total % 60
+                                    val timeStr = if (hours > 0 && mins > 0) "${hours}h ${mins}m"
+                                    else if (hours > 0) "${hours}h"
+                                    else "${mins}m"
+                                    "$timeStr logged today"
+                                } else {
+                                    "Nothing logged yet — that's okay too"
                                 }
                                 Text(
                                     text = balanceSummary,
@@ -386,7 +469,10 @@ fun TodayScreen(
 
 /**
  * Habit check-in row with smooth completion scale-up-then-settle animation,
- * text color transition, and haptic feedback.
+ * text color transition, and haptic feedback. Matches HabitDayCell styling:
+ * - Done: filled SageGreen with checkmark
+ * - Missed: neutral gray outline + thin diagonal line via Canvas
+ * - Pending: subtle circle border
  */
 @Composable
 private fun TodayHabitCheckItem(
@@ -396,6 +482,7 @@ private fun TodayHabitCheckItem(
 ) {
     val haptic = LocalHapticFeedback.current
     val isDone = log?.status == HabitStatus.DONE
+    val isMissed = log?.status == HabitStatus.MISSED
     val checkboxScale = remember { Animatable(1f) }
 
     LaunchedEffect(isDone) {
@@ -406,7 +493,11 @@ private fun TodayHabitCheckItem(
     }
 
     val textColor by animateColorAsState(
-        targetValue = if (isDone) OnSurfaceSubtle else OnSurface,
+        targetValue = when {
+            isDone -> OnSurfaceSubtle
+            isMissed -> StateMissed
+            else -> OnSurface
+        },
         animationSpec = tween(200),
         label = "habit_text_color"
     )
@@ -426,30 +517,57 @@ private fun TodayHabitCheckItem(
         horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         Box(
-            modifier = Modifier
-                .size(44.dp),
+            modifier = Modifier.size(44.dp),
             contentAlignment = Alignment.Center
         ) {
             Box(
                 modifier = Modifier
                     .size(24.dp)
                     .scale(checkboxScale.value)
-                    .clip(CircleShape)
-                    .border(
-                        2.dp,
-                        if (isDone) SageGreen else SteelBlueDark,
-                        CircleShape
-                    )
-                    .background(if (isDone) SageGreenContainer else Color.Transparent),
+                    .clip(CircleShape),
                 contentAlignment = Alignment.Center
             ) {
-                if (isDone) {
-                    Icon(
-                        Icons.Filled.Check,
-                        contentDescription = "Done",
-                        modifier = Modifier.size(14.dp),
-                        tint = SageGreen
-                    )
+                when {
+                    isDone -> {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .background(SageGreen),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                Icons.Filled.Check,
+                                contentDescription = "Done",
+                                modifier = Modifier.size(14.dp),
+                                tint = Background
+                            )
+                        }
+                    }
+                    isMissed -> {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .border(1.5.dp, StateMissed, CircleShape),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Canvas(modifier = Modifier.size(10.dp)) {
+                                drawLine(
+                                    color = StateMissed,
+                                    start = Offset(0f, size.height),
+                                    end = Offset(size.width, 0f),
+                                    strokeWidth = 1.5.dp.toPx(),
+                                    cap = StrokeCap.Round
+                                )
+                            }
+                        }
+                    }
+                    else -> {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .border(1.5.dp, SteelBlueDark, CircleShape)
+                        )
+                    }
                 }
             }
         }

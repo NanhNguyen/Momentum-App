@@ -158,6 +158,15 @@ fun MomentumAppContent(startDestination: String = AppRoutes.TODAY) {
                     },
                     onNavigateToSettings = {
                         navController.navigate(AppRoutes.SETTINGS)
+                    },
+                    onNavigateToReflect = {
+                        navController.navigate(AppRoutes.REFLECTION) {
+                            popUpTo(navController.graph.findStartDestination().id) {
+                                saveState = true
+                            }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
                     }
                 )
             }

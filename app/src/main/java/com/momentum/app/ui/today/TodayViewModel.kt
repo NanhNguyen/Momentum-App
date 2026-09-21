@@ -5,14 +5,49 @@ import androidx.lifecycle.viewModelScope
 import com.momentum.app.data.repository.HabitRepository
 import com.momentum.app.data.repository.TaskRepository
 import com.momentum.app.domain.model.*
+import com.momentum.app.domain.usecase.GetTodayProgressSummaryUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.time.LocalDate
+import java.time.LocalTime
 import javax.inject.Inject
 
+enum class TimeOfDay {
+    MORNING,
+    AFTERNOON,
+    EVENING;
+
+    companion object {
+        fun current(): TimeOfDay {
+            val hour = LocalTime.now().hour
+            return when {
+                hour < 12 -> MORNING
+                hour < 18 -> AFTERNOON
+                else -> EVENING
+            }
+        }
+    }
+
+    val greeting: String
+        get() = when (this) {
+            MORNING -> "Good morning"
+            AFTERNOON -> "Good afternoon"
+            EVENING -> "Good evening"
+        }
+
+    val secondaryPrompt: String
+        get() = when (this) {
+            MORNING -> "What matters most today?"
+            AFTERNOON -> "How's today going?"
+            EVENING -> "How did today go?"
+        }
+}
+
 data class TodayUiState(
-    val greeting: String = "",
+    val timeOfDay: TimeOfDay = TimeOfDay.current(),
+    val greeting: String = TimeOfDay.current().greeting,
+    val secondaryPrompt: String = TimeOfDay.current().secondaryPrompt,
     val bigThree: List<Task> = emptyList(),
     val otherTasks: List<Task> = emptyList(),
     val todayHabits: List<Pair<Habit, HabitLog?>> = emptyList(),
@@ -21,6 +56,7 @@ data class TodayUiState(
     val showBigThreeLimitMessage: Boolean = false,
     val entertainmentMinutesToday: Int = 0,
     val restMinutesToday: Int = 0,
+    val totalLeisureMinutesToday: Int = 0,
     // "This week at a glance"
     val weekConsistencyScore: Int = 0,
     val weekTasksCompleted: Int = 0,
@@ -31,7 +67,8 @@ data class TodayUiState(
 class TodayViewModel @Inject constructor(
     private val taskRepository: TaskRepository,
     private val habitRepository: HabitRepository,
-    private val entertainmentRepository: com.momentum.app.data.repository.EntertainmentRepository
+    private val entertainmentRepository: com.momentum.app.data.repository.EntertainmentRepository,
+    private val getTodayProgressSummaryUseCase: GetTodayProgressSummaryUseCase
 ) : ViewModel() {
 
     private val today: LocalDate get() = LocalDate.now()
@@ -39,7 +76,6 @@ class TodayViewModel @Inject constructor(
     val uiState: StateFlow<TodayUiState> = _uiState.asStateFlow()
 
     init {
-        _uiState.update { it.copy(greeting = buildGreeting()) }
         loadData()
     }
 
@@ -67,10 +103,15 @@ class TodayViewModel @Inject constructor(
                 habitRepository.getAllLogsForWeek(monday, sunday)
             ) { weekTasks, weekLogs -> weekTasks to weekLogs }
 
-            combine(todayTasksFlow, todayOtherFlow, weekDataFlow) {
-                (bigThree, allTasks),
+            combine(
+                todayTasksFlow,
+                todayOtherFlow,
+                weekDataFlow,
+                getTodayProgressSummaryUseCase(today)
+            ) { (bigThree, allTasks),
                 (habits, logsToday, entertainmentLogsToday),
-                (weekTasks, weekLogs) ->
+                (weekTasks, weekLogs),
+                todayProgress ->
 
                 val otherTasks = allTasks.filter { !it.isBigThree }
                 val habitPairs = habits.map { habit ->
@@ -99,8 +140,12 @@ class TodayViewModel @Inject constructor(
                     scores.average().toInt()
                 } else 0
 
+                val currentTimeOfDay = TimeOfDay.current()
+
                 TodayUiState(
-                    greeting = buildGreeting(),
+                    timeOfDay = currentTimeOfDay,
+                    greeting = currentTimeOfDay.greeting,
+                    secondaryPrompt = currentTimeOfDay.secondaryPrompt,
                     bigThree = bigThree,
                     otherTasks = otherTasks,
                     todayHabits = habitPairs,
@@ -109,6 +154,7 @@ class TodayViewModel @Inject constructor(
                     showBigThreeLimitMessage = false,
                     entertainmentMinutesToday = entMinutes,
                     restMinutesToday = restMinutes,
+                    totalLeisureMinutesToday = todayProgress.totalLeisureMinutes,
                     weekConsistencyScore = weekConsistency,
                     weekTasksCompleted = weekTasksDone,
                     weekBigThreeRate = weekB3Rate
@@ -144,14 +190,5 @@ class TodayViewModel @Inject constructor(
 
     fun dismissBigThreeLimitMessage() {
         _uiState.update { it.copy(showBigThreeLimitMessage = false) }
-    }
-
-    private fun buildGreeting(): String {
-        val hour = java.time.LocalTime.now().hour
-        return when {
-            hour < 12 -> "Good morning"
-            hour < 17 -> "Good afternoon"
-            else -> "Good evening"
-        }
     }
 }

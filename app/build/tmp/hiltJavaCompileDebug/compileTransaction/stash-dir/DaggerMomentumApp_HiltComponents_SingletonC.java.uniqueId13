@@ -26,6 +26,7 @@ import com.momentum.app.di.DatabaseModule_ProvideHabitLogDaoFactory;
 import com.momentum.app.di.DatabaseModule_ProvideMomentumDatabaseFactory;
 import com.momentum.app.di.DatabaseModule_ProvideReflectionDaoFactory;
 import com.momentum.app.di.DatabaseModule_ProvideTaskDaoFactory;
+import com.momentum.app.domain.usecase.GetTodayProgressSummaryUseCase;
 import com.momentum.app.ui.balance.BalanceViewModel;
 import com.momentum.app.ui.balance.BalanceViewModel_HiltModules;
 import com.momentum.app.ui.habits.AddEditHabitViewModel;
@@ -435,43 +436,28 @@ public final class DaggerMomentumApp_HiltComponents_SingletonC {
 
     @IdentifierNameString
     private static final class LazyClassKeyProvider {
-      static String com_momentum_app_ui_habits_AddEditHabitViewModel = "com.momentum.app.ui.habits.AddEditHabitViewModel";
-
-      static String com_momentum_app_ui_reflection_ReflectionViewModel = "com.momentum.app.ui.reflection.ReflectionViewModel";
-
-      static String com_momentum_app_ui_tasks_AddEditTaskViewModel = "com.momentum.app.ui.tasks.AddEditTaskViewModel";
-
-      static String com_momentum_app_ui_tasks_TaskViewModel = "com.momentum.app.ui.tasks.TaskViewModel";
-
-      static String com_momentum_app_ui_insights_InsightsViewModel = "com.momentum.app.ui.insights.InsightsViewModel";
-
-      static String com_momentum_app_ui_today_TodayViewModel = "com.momentum.app.ui.today.TodayViewModel";
+      static String com_momentum_app_ui_habits_HabitViewModel = "com.momentum.app.ui.habits.HabitViewModel";
 
       static String com_momentum_app_ui_settings_SettingsViewModel = "com.momentum.app.ui.settings.SettingsViewModel";
 
       static String com_momentum_app_ui_balance_BalanceViewModel = "com.momentum.app.ui.balance.BalanceViewModel";
 
-      static String com_momentum_app_ui_habits_HabitViewModel = "com.momentum.app.ui.habits.HabitViewModel";
-
       static String com_momentum_app_ui_onboarding_OnboardingViewModel = "com.momentum.app.ui.onboarding.OnboardingViewModel";
 
-      @KeepFieldType
-      AddEditHabitViewModel com_momentum_app_ui_habits_AddEditHabitViewModel2;
+      static String com_momentum_app_ui_insights_InsightsViewModel = "com.momentum.app.ui.insights.InsightsViewModel";
+
+      static String com_momentum_app_ui_tasks_TaskViewModel = "com.momentum.app.ui.tasks.TaskViewModel";
+
+      static String com_momentum_app_ui_reflection_ReflectionViewModel = "com.momentum.app.ui.reflection.ReflectionViewModel";
+
+      static String com_momentum_app_ui_today_TodayViewModel = "com.momentum.app.ui.today.TodayViewModel";
+
+      static String com_momentum_app_ui_habits_AddEditHabitViewModel = "com.momentum.app.ui.habits.AddEditHabitViewModel";
+
+      static String com_momentum_app_ui_tasks_AddEditTaskViewModel = "com.momentum.app.ui.tasks.AddEditTaskViewModel";
 
       @KeepFieldType
-      ReflectionViewModel com_momentum_app_ui_reflection_ReflectionViewModel2;
-
-      @KeepFieldType
-      AddEditTaskViewModel com_momentum_app_ui_tasks_AddEditTaskViewModel2;
-
-      @KeepFieldType
-      TaskViewModel com_momentum_app_ui_tasks_TaskViewModel2;
-
-      @KeepFieldType
-      InsightsViewModel com_momentum_app_ui_insights_InsightsViewModel2;
-
-      @KeepFieldType
-      TodayViewModel com_momentum_app_ui_today_TodayViewModel2;
+      HabitViewModel com_momentum_app_ui_habits_HabitViewModel2;
 
       @KeepFieldType
       SettingsViewModel com_momentum_app_ui_settings_SettingsViewModel2;
@@ -480,10 +466,25 @@ public final class DaggerMomentumApp_HiltComponents_SingletonC {
       BalanceViewModel com_momentum_app_ui_balance_BalanceViewModel2;
 
       @KeepFieldType
-      HabitViewModel com_momentum_app_ui_habits_HabitViewModel2;
+      OnboardingViewModel com_momentum_app_ui_onboarding_OnboardingViewModel2;
 
       @KeepFieldType
-      OnboardingViewModel com_momentum_app_ui_onboarding_OnboardingViewModel2;
+      InsightsViewModel com_momentum_app_ui_insights_InsightsViewModel2;
+
+      @KeepFieldType
+      TaskViewModel com_momentum_app_ui_tasks_TaskViewModel2;
+
+      @KeepFieldType
+      ReflectionViewModel com_momentum_app_ui_reflection_ReflectionViewModel2;
+
+      @KeepFieldType
+      TodayViewModel com_momentum_app_ui_today_TodayViewModel2;
+
+      @KeepFieldType
+      AddEditHabitViewModel com_momentum_app_ui_habits_AddEditHabitViewModel2;
+
+      @KeepFieldType
+      AddEditTaskViewModel com_momentum_app_ui_tasks_AddEditTaskViewModel2;
     }
   }
 
@@ -551,55 +552,55 @@ public final class DaggerMomentumApp_HiltComponents_SingletonC {
 
     @IdentifierNameString
     private static final class LazyClassKeyProvider {
-      static String com_momentum_app_ui_habits_HabitViewModel = "com.momentum.app.ui.habits.HabitViewModel";
-
-      static String com_momentum_app_ui_settings_SettingsViewModel = "com.momentum.app.ui.settings.SettingsViewModel";
-
-      static String com_momentum_app_ui_onboarding_OnboardingViewModel = "com.momentum.app.ui.onboarding.OnboardingViewModel";
-
-      static String com_momentum_app_ui_reflection_ReflectionViewModel = "com.momentum.app.ui.reflection.ReflectionViewModel";
-
       static String com_momentum_app_ui_today_TodayViewModel = "com.momentum.app.ui.today.TodayViewModel";
 
-      static String com_momentum_app_ui_insights_InsightsViewModel = "com.momentum.app.ui.insights.InsightsViewModel";
+      static String com_momentum_app_ui_habits_HabitViewModel = "com.momentum.app.ui.habits.HabitViewModel";
 
       static String com_momentum_app_ui_tasks_AddEditTaskViewModel = "com.momentum.app.ui.tasks.AddEditTaskViewModel";
 
+      static String com_momentum_app_ui_settings_SettingsViewModel = "com.momentum.app.ui.settings.SettingsViewModel";
+
       static String com_momentum_app_ui_tasks_TaskViewModel = "com.momentum.app.ui.tasks.TaskViewModel";
 
-      static String com_momentum_app_ui_balance_BalanceViewModel = "com.momentum.app.ui.balance.BalanceViewModel";
+      static String com_momentum_app_ui_reflection_ReflectionViewModel = "com.momentum.app.ui.reflection.ReflectionViewModel";
 
       static String com_momentum_app_ui_habits_AddEditHabitViewModel = "com.momentum.app.ui.habits.AddEditHabitViewModel";
 
-      @KeepFieldType
-      HabitViewModel com_momentum_app_ui_habits_HabitViewModel2;
+      static String com_momentum_app_ui_insights_InsightsViewModel = "com.momentum.app.ui.insights.InsightsViewModel";
 
-      @KeepFieldType
-      SettingsViewModel com_momentum_app_ui_settings_SettingsViewModel2;
+      static String com_momentum_app_ui_balance_BalanceViewModel = "com.momentum.app.ui.balance.BalanceViewModel";
 
-      @KeepFieldType
-      OnboardingViewModel com_momentum_app_ui_onboarding_OnboardingViewModel2;
-
-      @KeepFieldType
-      ReflectionViewModel com_momentum_app_ui_reflection_ReflectionViewModel2;
+      static String com_momentum_app_ui_onboarding_OnboardingViewModel = "com.momentum.app.ui.onboarding.OnboardingViewModel";
 
       @KeepFieldType
       TodayViewModel com_momentum_app_ui_today_TodayViewModel2;
 
       @KeepFieldType
-      InsightsViewModel com_momentum_app_ui_insights_InsightsViewModel2;
+      HabitViewModel com_momentum_app_ui_habits_HabitViewModel2;
 
       @KeepFieldType
       AddEditTaskViewModel com_momentum_app_ui_tasks_AddEditTaskViewModel2;
 
       @KeepFieldType
+      SettingsViewModel com_momentum_app_ui_settings_SettingsViewModel2;
+
+      @KeepFieldType
       TaskViewModel com_momentum_app_ui_tasks_TaskViewModel2;
+
+      @KeepFieldType
+      ReflectionViewModel com_momentum_app_ui_reflection_ReflectionViewModel2;
+
+      @KeepFieldType
+      AddEditHabitViewModel com_momentum_app_ui_habits_AddEditHabitViewModel2;
+
+      @KeepFieldType
+      InsightsViewModel com_momentum_app_ui_insights_InsightsViewModel2;
 
       @KeepFieldType
       BalanceViewModel com_momentum_app_ui_balance_BalanceViewModel2;
 
       @KeepFieldType
-      AddEditHabitViewModel com_momentum_app_ui_habits_AddEditHabitViewModel2;
+      OnboardingViewModel com_momentum_app_ui_onboarding_OnboardingViewModel2;
     }
 
     private static final class SwitchingProvider<T> implements Provider<T> {
@@ -630,7 +631,7 @@ public final class DaggerMomentumApp_HiltComponents_SingletonC {
           return (T) new AddEditTaskViewModel(singletonCImpl.taskRepositoryProvider.get());
 
           case 2: // com.momentum.app.ui.balance.BalanceViewModel 
-          return (T) new BalanceViewModel(singletonCImpl.entertainmentRepositoryProvider.get(), singletonCImpl.taskRepositoryProvider.get(), singletonCImpl.habitRepositoryProvider.get());
+          return (T) new BalanceViewModel(singletonCImpl.entertainmentRepositoryProvider.get(), singletonCImpl.taskRepositoryProvider.get(), singletonCImpl.habitRepositoryProvider.get(), singletonCImpl.settingsRepositoryProvider.get(), singletonCImpl.getTodayProgressSummaryUseCaseProvider.get());
 
           case 3: // com.momentum.app.ui.habits.HabitViewModel 
           return (T) new HabitViewModel(singletonCImpl.habitRepositoryProvider.get());
@@ -743,6 +744,8 @@ public final class DaggerMomentumApp_HiltComponents_SingletonC {
 
     private Provider<EntertainmentRepository> entertainmentRepositoryProvider;
 
+    private Provider<GetTodayProgressSummaryUseCase> getTodayProgressSummaryUseCaseProvider;
+
     private Provider<ReflectionRepository> reflectionRepositoryProvider;
 
     private Provider<BackupRepository> backupRepositoryProvider;
@@ -784,8 +787,9 @@ public final class DaggerMomentumApp_HiltComponents_SingletonC {
       this.habitRepositoryProvider = DoubleCheck.provider(new SwitchingProvider<HabitRepository>(singletonCImpl, 2));
       this.taskRepositoryProvider = DoubleCheck.provider(new SwitchingProvider<TaskRepository>(singletonCImpl, 3));
       this.entertainmentRepositoryProvider = DoubleCheck.provider(new SwitchingProvider<EntertainmentRepository>(singletonCImpl, 4));
-      this.reflectionRepositoryProvider = DoubleCheck.provider(new SwitchingProvider<ReflectionRepository>(singletonCImpl, 5));
-      this.backupRepositoryProvider = DoubleCheck.provider(new SwitchingProvider<BackupRepository>(singletonCImpl, 6));
+      this.getTodayProgressSummaryUseCaseProvider = DoubleCheck.provider(new SwitchingProvider<GetTodayProgressSummaryUseCase>(singletonCImpl, 5));
+      this.reflectionRepositoryProvider = DoubleCheck.provider(new SwitchingProvider<ReflectionRepository>(singletonCImpl, 6));
+      this.backupRepositoryProvider = DoubleCheck.provider(new SwitchingProvider<BackupRepository>(singletonCImpl, 7));
     }
 
     @Override
@@ -847,10 +851,13 @@ public final class DaggerMomentumApp_HiltComponents_SingletonC {
           case 4: // com.momentum.app.data.repository.EntertainmentRepository 
           return (T) new EntertainmentRepository(singletonCImpl.entertainmentDao());
 
-          case 5: // com.momentum.app.data.repository.ReflectionRepository 
+          case 5: // com.momentum.app.domain.usecase.GetTodayProgressSummaryUseCase 
+          return (T) new GetTodayProgressSummaryUseCase(singletonCImpl.taskRepositoryProvider.get(), singletonCImpl.habitRepositoryProvider.get(), singletonCImpl.entertainmentRepositoryProvider.get());
+
+          case 6: // com.momentum.app.data.repository.ReflectionRepository 
           return (T) new ReflectionRepository(singletonCImpl.reflectionDao());
 
-          case 6: // com.momentum.app.data.repository.BackupRepository 
+          case 7: // com.momentum.app.data.repository.BackupRepository 
           return (T) new BackupRepository(singletonCImpl.provideMomentumDatabaseProvider.get(), singletonCImpl.taskDao(), singletonCImpl.habitDao(), singletonCImpl.habitLogDao(), singletonCImpl.reflectionDao(), singletonCImpl.entertainmentDao(), singletonCImpl.appSettingsDao());
 
           default: throw new AssertionError(id);
