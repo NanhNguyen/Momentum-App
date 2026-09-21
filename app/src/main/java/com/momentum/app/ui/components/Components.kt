@@ -157,7 +157,7 @@ fun HabitWeekGrid(
 
 @Composable
 fun MoodPicker(
-    selectedMood: Mood,
+    selectedMood: Mood?,
     onMoodSelect: (Mood) -> Unit,
     modifier: Modifier = Modifier
 ) {

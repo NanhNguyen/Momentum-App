@@ -162,8 +162,13 @@ class ReflectionRepository @Inject constructor(private val dao: ReflectionDao) {
     fun getAllReflections(): Flow<List<ReflectionEntry>> =
         dao.getAllReflections().map { list -> list.map { it.toDomain() } }
 
+    fun getAllReflectionsFlow(): Flow<List<ReflectionEntry>> = getAllReflections()
+
     fun getReflectionForDate(date: LocalDate): Flow<ReflectionEntry?> =
         dao.getReflectionForDate(date.toEpochDay()).map { it?.toDomain() }
+
+    suspend fun getReflectionByDate(date: LocalDate): ReflectionEntry? =
+        dao.getReflectionForDateSync(date.toEpochDay())?.toDomain()
 
     fun getReflectionsForWeek(startDate: LocalDate, endDate: LocalDate): Flow<List<ReflectionEntry>> =
         dao.getReflectionsForWeek(startDate.toEpochDay(), endDate.toEpochDay())
