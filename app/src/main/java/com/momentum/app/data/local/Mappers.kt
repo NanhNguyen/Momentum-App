@@ -96,7 +96,8 @@ fun EntertainmentLogEntity.toDomain(): EntertainmentLog = EntertainmentLog(
     date = LocalDate.ofEpochDay(dateEpochDay),
     durationMinutes = durationMinutes,
     note = note,
-    createdAt = Instant.ofEpochMilli(createdAtEpochMilli)
+    createdAt = Instant.ofEpochMilli(createdAtEpochMilli),
+    isIntentional = isIntentional
 )
 
 fun EntertainmentLog.toEntity(): EntertainmentLogEntity = EntertainmentLogEntity(
@@ -105,7 +106,8 @@ fun EntertainmentLog.toEntity(): EntertainmentLogEntity = EntertainmentLogEntity
     dateEpochDay = date.toEpochDay(),
     durationMinutes = durationMinutes,
     note = note,
-    createdAtEpochMilli = createdAt.toEpochMilli()
+    createdAtEpochMilli = createdAt.toEpochMilli(),
+    isIntentional = isIntentional
 )
 
 // ─────────────── AppSettings Mappers ───────────────
@@ -115,7 +117,8 @@ fun AppSettingsEntity.toDomain(): AppSettings = AppSettings(
     isOnboardingCompleted = isOnboardingCompleted,
     isEveningReminderEnabled = isEveningReminderEnabled,
     eveningReminderHour = eveningReminderHour,
-    eveningReminderMinute = eveningReminderMinute
+    eveningReminderMinute = eveningReminderMinute,
+    weeklyPlayReferenceHours = weeklyPlayReferenceHours
 )
 
 fun AppSettings.toEntity(): AppSettingsEntity = AppSettingsEntity(
@@ -123,5 +126,6 @@ fun AppSettings.toEntity(): AppSettingsEntity = AppSettingsEntity(
     isOnboardingCompleted = isOnboardingCompleted,
     isEveningReminderEnabled = isEveningReminderEnabled,
     eveningReminderHour = eveningReminderHour,
-    eveningReminderMinute = eveningReminderMinute
+    eveningReminderMinute = eveningReminderMinute,
+    weeklyPlayReferenceHours = weeklyPlayReferenceHours
 )

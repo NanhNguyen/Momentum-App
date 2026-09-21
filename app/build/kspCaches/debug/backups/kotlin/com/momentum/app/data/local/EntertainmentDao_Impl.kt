@@ -8,6 +8,7 @@ import androidx.room.util.getColumnIndexOrThrow
 import androidx.room.util.performSuspending
 import androidx.sqlite.SQLiteStatement
 import javax.`annotation`.processing.Generated
+import kotlin.Boolean
 import kotlin.Int
 import kotlin.Long
 import kotlin.String
@@ -38,7 +39,7 @@ public class EntertainmentDao_Impl(
     this.__insertAdapterOfEntertainmentLogEntity = object :
         EntityInsertAdapter<EntertainmentLogEntity>() {
       protected override fun createQuery(): String =
-          "INSERT OR REPLACE INTO `entertainment_logs` (`id`,`category`,`dateEpochDay`,`durationMinutes`,`note`,`createdAtEpochMilli`) VALUES (nullif(?, 0),?,?,?,?,?)"
+          "INSERT OR REPLACE INTO `entertainment_logs` (`id`,`category`,`dateEpochDay`,`durationMinutes`,`note`,`createdAtEpochMilli`,`isIntentional`) VALUES (nullif(?, 0),?,?,?,?,?,?)"
 
       protected override fun bind(statement: SQLiteStatement, entity: EntertainmentLogEntity) {
         statement.bindLong(1, entity.id)
@@ -52,6 +53,13 @@ public class EntertainmentDao_Impl(
           statement.bindText(5, _tmpNote)
         }
         statement.bindLong(6, entity.createdAtEpochMilli)
+        val _tmpIsIntentional: Boolean? = entity.isIntentional
+        val _tmp: Int? = _tmpIsIntentional?.let { if (it) 1 else 0 }
+        if (_tmp == null) {
+          statement.bindNull(7)
+        } else {
+          statement.bindLong(7, _tmp.toLong())
+        }
       }
     }
     this.__deleteAdapterOfEntertainmentLogEntity = object :
@@ -66,7 +74,7 @@ public class EntertainmentDao_Impl(
     this.__updateAdapterOfEntertainmentLogEntity = object :
         EntityDeleteOrUpdateAdapter<EntertainmentLogEntity>() {
       protected override fun createQuery(): String =
-          "UPDATE OR ABORT `entertainment_logs` SET `id` = ?,`category` = ?,`dateEpochDay` = ?,`durationMinutes` = ?,`note` = ?,`createdAtEpochMilli` = ? WHERE `id` = ?"
+          "UPDATE OR ABORT `entertainment_logs` SET `id` = ?,`category` = ?,`dateEpochDay` = ?,`durationMinutes` = ?,`note` = ?,`createdAtEpochMilli` = ?,`isIntentional` = ? WHERE `id` = ?"
 
       protected override fun bind(statement: SQLiteStatement, entity: EntertainmentLogEntity) {
         statement.bindLong(1, entity.id)
@@ -80,7 +88,14 @@ public class EntertainmentDao_Impl(
           statement.bindText(5, _tmpNote)
         }
         statement.bindLong(6, entity.createdAtEpochMilli)
-        statement.bindLong(7, entity.id)
+        val _tmpIsIntentional: Boolean? = entity.isIntentional
+        val _tmp: Int? = _tmpIsIntentional?.let { if (it) 1 else 0 }
+        if (_tmp == null) {
+          statement.bindNull(7)
+        } else {
+          statement.bindLong(7, _tmp.toLong())
+        }
+        statement.bindLong(8, entity.id)
       }
     }
   }
@@ -114,6 +129,7 @@ public class EntertainmentDao_Impl(
         val _columnIndexOfNote: Int = getColumnIndexOrThrow(_stmt, "note")
         val _columnIndexOfCreatedAtEpochMilli: Int = getColumnIndexOrThrow(_stmt,
             "createdAtEpochMilli")
+        val _columnIndexOfIsIntentional: Int = getColumnIndexOrThrow(_stmt, "isIntentional")
         val _result: MutableList<EntertainmentLogEntity> = mutableListOf()
         while (_stmt.step()) {
           val _item: EntertainmentLogEntity
@@ -133,8 +149,16 @@ public class EntertainmentDao_Impl(
           }
           val _tmpCreatedAtEpochMilli: Long
           _tmpCreatedAtEpochMilli = _stmt.getLong(_columnIndexOfCreatedAtEpochMilli)
+          val _tmpIsIntentional: Boolean?
+          val _tmp: Int?
+          if (_stmt.isNull(_columnIndexOfIsIntentional)) {
+            _tmp = null
+          } else {
+            _tmp = _stmt.getLong(_columnIndexOfIsIntentional).toInt()
+          }
+          _tmpIsIntentional = _tmp?.let { it != 0 }
           _item =
-              EntertainmentLogEntity(_tmpId,_tmpCategory,_tmpDateEpochDay,_tmpDurationMinutes,_tmpNote,_tmpCreatedAtEpochMilli)
+              EntertainmentLogEntity(_tmpId,_tmpCategory,_tmpDateEpochDay,_tmpDurationMinutes,_tmpNote,_tmpCreatedAtEpochMilli,_tmpIsIntentional)
           _result.add(_item)
         }
         _result
@@ -159,6 +183,7 @@ public class EntertainmentDao_Impl(
         val _columnIndexOfNote: Int = getColumnIndexOrThrow(_stmt, "note")
         val _columnIndexOfCreatedAtEpochMilli: Int = getColumnIndexOrThrow(_stmt,
             "createdAtEpochMilli")
+        val _columnIndexOfIsIntentional: Int = getColumnIndexOrThrow(_stmt, "isIntentional")
         val _result: MutableList<EntertainmentLogEntity> = mutableListOf()
         while (_stmt.step()) {
           val _item: EntertainmentLogEntity
@@ -178,8 +203,16 @@ public class EntertainmentDao_Impl(
           }
           val _tmpCreatedAtEpochMilli: Long
           _tmpCreatedAtEpochMilli = _stmt.getLong(_columnIndexOfCreatedAtEpochMilli)
+          val _tmpIsIntentional: Boolean?
+          val _tmp: Int?
+          if (_stmt.isNull(_columnIndexOfIsIntentional)) {
+            _tmp = null
+          } else {
+            _tmp = _stmt.getLong(_columnIndexOfIsIntentional).toInt()
+          }
+          _tmpIsIntentional = _tmp?.let { it != 0 }
           _item =
-              EntertainmentLogEntity(_tmpId,_tmpCategory,_tmpDateEpochDay,_tmpDurationMinutes,_tmpNote,_tmpCreatedAtEpochMilli)
+              EntertainmentLogEntity(_tmpId,_tmpCategory,_tmpDateEpochDay,_tmpDurationMinutes,_tmpNote,_tmpCreatedAtEpochMilli,_tmpIsIntentional)
           _result.add(_item)
         }
         _result
@@ -207,6 +240,7 @@ public class EntertainmentDao_Impl(
         val _columnIndexOfNote: Int = getColumnIndexOrThrow(_stmt, "note")
         val _columnIndexOfCreatedAtEpochMilli: Int = getColumnIndexOrThrow(_stmt,
             "createdAtEpochMilli")
+        val _columnIndexOfIsIntentional: Int = getColumnIndexOrThrow(_stmt, "isIntentional")
         val _result: MutableList<EntertainmentLogEntity> = mutableListOf()
         while (_stmt.step()) {
           val _item: EntertainmentLogEntity
@@ -226,8 +260,16 @@ public class EntertainmentDao_Impl(
           }
           val _tmpCreatedAtEpochMilli: Long
           _tmpCreatedAtEpochMilli = _stmt.getLong(_columnIndexOfCreatedAtEpochMilli)
+          val _tmpIsIntentional: Boolean?
+          val _tmp: Int?
+          if (_stmt.isNull(_columnIndexOfIsIntentional)) {
+            _tmp = null
+          } else {
+            _tmp = _stmt.getLong(_columnIndexOfIsIntentional).toInt()
+          }
+          _tmpIsIntentional = _tmp?.let { it != 0 }
           _item =
-              EntertainmentLogEntity(_tmpId,_tmpCategory,_tmpDateEpochDay,_tmpDurationMinutes,_tmpNote,_tmpCreatedAtEpochMilli)
+              EntertainmentLogEntity(_tmpId,_tmpCategory,_tmpDateEpochDay,_tmpDurationMinutes,_tmpNote,_tmpCreatedAtEpochMilli,_tmpIsIntentional)
           _result.add(_item)
         }
         _result

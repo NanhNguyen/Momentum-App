@@ -23,7 +23,7 @@ object DatabaseModule {
             MomentumDatabase::class.java,
             "momentum.db"
         )
-            .addMigrations(MomentumDatabase.MIGRATION_2_3)
+            .addMigrations(MomentumDatabase.MIGRATION_2_3, MomentumDatabase.MIGRATION_3_4)
             .fallbackToDestructiveMigration()
             .build()
 

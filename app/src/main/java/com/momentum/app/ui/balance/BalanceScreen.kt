@@ -1,5 +1,8 @@
 package com.momentum.app.ui.balance
 
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -14,7 +17,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.Close
+import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Spa
+import androidx.compose.material.icons.outlined.Tune
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -42,12 +47,26 @@ fun BalanceScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
+    var showDeepWorkInfo by remember { mutableStateOf(false) }
+    var showReferenceDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(uiState.message) {
         uiState.message?.let {
             snackbarHostState.showSnackbar(it)
             viewModel.clearMessage()
         }
+    }
+
+    if (showDeepWorkInfo) {
+        DeepWorkInfoDialog(onDismiss = { showDeepWorkInfo = false })
+    }
+
+    if (showReferenceDialog) {
+        WeeklyReferenceDialog(
+            currentHours = uiState.weeklyPlayReferenceHours,
+            onSave = { hours -> viewModel.updateWeeklyReferenceHours(hours) },
+            onDismiss = { showReferenceDialog = false }
+        )
     }
 
     Scaffold(
@@ -84,37 +103,55 @@ fun BalanceScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp),
             contentPadding = PaddingValues(bottom = 32.dp)
         ) {
-            // Philosophy quote
+            // 1. "Today at a glance" header
             item {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    modifier = Modifier.padding(vertical = 4.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Outlined.Spa,
-                        contentDescription = null,
-                        tint = SageGreen,
-                        modifier = Modifier.size(18.dp)
-                    )
-                    Text(
-                        text = "Don't eliminate entertainment — make it intentional.",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = OnSurfaceMuted
+                TodayAtAGlanceHeader(
+                    summaryText = uiState.todayProgress.toDisplayText()
+                )
+            }
+
+            // 2. Repositioned "Logged Today" section (visible without scrolling past form)
+            item {
+                SectionHeader(
+                    title = "Logged Today",
+                    subtitle = if (uiState.todayLogs.isEmpty()) "No sessions logged yet today"
+                    else "${uiState.todayLogs.size} recorded sessions"
+                )
+            }
+
+            if (uiState.todayLogs.isEmpty()) {
+                item {
+                    MomentumCard {
+                        Text(
+                            text = "No intentional leisure or rest recorded today yet.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = OnSurfaceSubtle,
+                            modifier = Modifier.padding(vertical = 6.dp)
+                        )
+                    }
+                }
+            } else {
+                items(uiState.todayLogs, key = { it.id }) { log ->
+                    LogItemRow(
+                        log = log,
+                        onDelete = { viewModel.deleteLog(log.id) }
                     )
                 }
             }
 
-            // Weekly Balance Breakdown Card
+            // 3. Weekly Balance Breakdown Card (3 segments, empty state teaches shape, info dialog)
             item {
                 WeeklyBalanceCard(
                     deepWorkMinutes = uiState.deepWorkMinutesWeek,
                     entertainmentMinutes = uiState.entertainmentMinutesWeek,
-                    restMinutes = uiState.restMinutesWeek
+                    restMinutes = uiState.restMinutesWeek,
+                    weeklyReferenceHours = uiState.weeklyPlayReferenceHours,
+                    onOpenInfo = { showDeepWorkInfo = true },
+                    onOpenReferenceDialog = { showReferenceDialog = true }
                 )
             }
 
-            // Quick Log Card
+            // 4. Quick Log Card with "Chosen on purpose?" reflection chip
             item {
                 MomentumCard {
                     SectionHeader(
@@ -177,6 +214,55 @@ fun BalanceScreen(
 
                     Spacer(Modifier.height(16.dp))
 
+                    // 5. "Chosen on purpose?" reflection chips (optional)
+                    Text(
+                        text = "Chosen on purpose? (optional)",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = OnSurfaceSubtle
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        FilterChip(
+                            selected = uiState.isIntentional == true,
+                            onClick = { viewModel.onIntentionalSelect(true) },
+                            label = { Text("Yes") },
+                            colors = FilterChipDefaults.filterChipColors(
+                                selectedContainerColor = SageGreenContainer,
+                                selectedLabelColor = SageGreen,
+                                containerColor = SurfaceContainerHigh,
+                                labelColor = OnSurface
+                            ),
+                            border = FilterChipDefaults.filterChipBorder(
+                                enabled = true,
+                                selected = uiState.isIntentional == true,
+                                borderColor = SurfaceContainerHighest,
+                                selectedBorderColor = SageGreen
+                            )
+                        )
+                        FilterChip(
+                            selected = uiState.isIntentional == false,
+                            onClick = { viewModel.onIntentionalSelect(false) },
+                            label = { Text("Not sure") },
+                            colors = FilterChipDefaults.filterChipColors(
+                                selectedContainerColor = SteelBlue.copy(alpha = 0.2f),
+                                selectedLabelColor = SteelBlue,
+                                containerColor = SurfaceContainerHigh,
+                                labelColor = OnSurface
+                            ),
+                            border = FilterChipDefaults.filterChipBorder(
+                                enabled = true,
+                                selected = uiState.isIntentional == false,
+                                borderColor = SurfaceContainerHighest,
+                                selectedBorderColor = SteelBlue
+                            )
+                        )
+                    }
+
+                    Spacer(Modifier.height(20.dp))
+
                     Button(
                         onClick = viewModel::logActivity,
                         modifier = Modifier
@@ -198,34 +284,34 @@ fun BalanceScreen(
                     }
                 }
             }
+        }
+    }
+}
 
-            // Logged Today Section
-            item {
-                SectionHeader(
-                    title = "Logged Today",
-                    subtitle = "${uiState.todayLogs.size} recorded sessions"
-                )
-            }
-
-            if (uiState.todayLogs.isEmpty()) {
-                item {
-                    MomentumCard {
-                        Text(
-                            text = "No intentional leisure or rest recorded today yet.",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = OnSurfaceSubtle,
-                            modifier = Modifier.padding(vertical = 8.dp)
-                        )
-                    }
-                }
-            } else {
-                items(uiState.todayLogs, key = { it.id }) { log ->
-                    LogItemRow(
-                        log = log,
-                        onDelete = { viewModel.deleteLog(log.id) }
-                    )
-                }
-            }
+@Composable
+fun TodayAtAGlanceHeader(summaryText: String) {
+    Surface(
+        shape = RoundedCornerShape(12.dp),
+        color = SurfaceContainerHigh,
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Outlined.Spa,
+                contentDescription = null,
+                tint = SageGreen,
+                modifier = Modifier.size(18.dp)
+            )
+            Text(
+                text = summaryText,
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Medium,
+                color = OnSurface
+            )
         }
     }
 }
@@ -234,21 +320,40 @@ fun BalanceScreen(
 fun WeeklyBalanceCard(
     deepWorkMinutes: Int,
     entertainmentMinutes: Int,
-    restMinutes: Int
+    restMinutes: Int,
+    weeklyReferenceHours: Int?,
+    onOpenInfo: () -> Unit,
+    onOpenReferenceDialog: () -> Unit
 ) {
     val totalMinutes = deepWorkMinutes + entertainmentMinutes + restMinutes
 
-    val deepWorkPct = if (totalMinutes > 0) deepWorkMinutes.toFloat() / totalMinutes else 0f
-    val entPct = if (totalMinutes > 0) entertainmentMinutes.toFloat() / totalMinutes else 0f
-    val restPct = if (totalMinutes > 0) restMinutes.toFloat() / totalMinutes else 0f
+    val targetDeepWork = if (totalMinutes > 0) deepWorkMinutes.toFloat() / totalMinutes else 0f
+    val targetEnt = if (totalMinutes > 0) entertainmentMinutes.toFloat() / totalMinutes else 0f
+    val targetRest = if (totalMinutes > 0) restMinutes.toFloat() / totalMinutes else 0f
 
-    val entHours = entertainmentMinutes / 60
-    val entMins = entertainmentMinutes % 60
-    val entText = if (entHours > 0) "${entHours}h ${entMins}m" else "${entMins}m"
+    val animDeepWork by animateFloatAsState(
+        targetValue = targetDeepWork,
+        animationSpec = tween(durationMillis = 380, easing = FastOutSlowInEasing),
+        label = "animDeepWork"
+    )
+    val animEnt by animateFloatAsState(
+        targetValue = targetEnt,
+        animationSpec = tween(durationMillis = 380, easing = FastOutSlowInEasing),
+        label = "animEnt"
+    )
+    val animRest by animateFloatAsState(
+        targetValue = targetRest,
+        animationSpec = tween(durationMillis = 380, easing = FastOutSlowInEasing),
+        label = "animRest"
+    )
 
     val deepHours = deepWorkMinutes / 60
     val deepMins = deepWorkMinutes % 60
     val deepText = if (deepHours > 0) "${deepHours}h ${deepMins}m" else "${deepMins}m"
+
+    val entHours = entertainmentMinutes / 60
+    val entMins = entertainmentMinutes % 60
+    val entText = if (entHours > 0) "${entHours}h ${entMins}m" else "${entMins}m"
 
     val restHours = restMinutes / 60
     val restMins = restMinutes % 60
@@ -264,85 +369,170 @@ fun WeeklyBalanceCard(
     }
 
     MomentumCard {
-        SectionHeader(
-            title = "Weekly Balance Breakdown",
-            subtitle = "Focus, intentional play & recovery this week"
-        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                SectionHeader(
+                    title = "Weekly Balance Breakdown",
+                    subtitle = "Focus, intentional play & recovery this week"
+                )
+            }
+            IconButton(
+                onClick = onOpenInfo,
+                modifier = Modifier.size(32.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.Info,
+                    contentDescription = "Deep work formula info",
+                    tint = OnSurfaceSubtle,
+                    modifier = Modifier.size(18.dp)
+                )
+            }
+        }
 
         Spacer(Modifier.height(16.dp))
 
-        // Stacked horizontal bar
-        if (totalMinutes > 0) {
+        // Progress bar: empty state teaches the shape vs data-filled state
+        if (totalMinutes == 0) {
+            // Empty state: 3 equal preview segments with subtle tints & dividers
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(12.dp)
-                    .clip(RoundedCornerShape(6.dp))
+                    .height(14.dp)
+                    .clip(RoundedCornerShape(7.dp))
+                    .background(SurfaceContainerHighest),
+                horizontalArrangement = Arrangement.spacedBy(2.dp)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight()
+                        .background(SageGreen.copy(alpha = 0.25f))
+                )
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight()
+                        .background(SteelBlue.copy(alpha = 0.25f))
+                )
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight()
+                        .background(WarmSand.copy(alpha = 0.25f))
+                )
+            }
+        } else {
+            // Filled state: animated 3 segments
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(14.dp)
+                    .clip(RoundedCornerShape(7.dp))
                     .background(SurfaceContainerHighest)
             ) {
-                if (deepWorkPct > 0) {
+                if (animDeepWork > 0f) {
                     Box(
                         modifier = Modifier
-                            .weight(deepWorkPct)
+                            .weight(animDeepWork.coerceAtLeast(0.001f))
                             .fillMaxHeight()
                             .background(SageGreen)
                     )
                 }
-                if (entPct > 0) {
+                if (animEnt > 0f) {
                     Box(
                         modifier = Modifier
-                            .weight(entPct)
+                            .weight(animEnt.coerceAtLeast(0.001f))
                             .fillMaxHeight()
                             .background(SteelBlue)
                     )
                 }
-                if (restPct > 0) {
+                if (animRest > 0f) {
                     Box(
                         modifier = Modifier
-                            .weight(restPct)
+                            .weight(animRest.coerceAtLeast(0.001f))
                             .fillMaxHeight()
                             .background(WarmSand)
                     )
                 }
             }
-
-            Spacer(Modifier.height(14.dp))
-
-            // Legend
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                LegendItem(
-                    label = "Deep Work",
-                    durationText = deepText,
-                    percent = (deepWorkPct * 100).toInt(),
-                    color = SageGreen
-                )
-                LegendItem(
-                    label = "Entertainment",
-                    durationText = entText,
-                    percent = (entPct * 100).toInt(),
-                    color = SteelBlue
-                )
-                LegendItem(
-                    label = "Rest",
-                    durationText = restText,
-                    percent = (restPct * 100).toInt(),
-                    color = WarmSand
-                )
-            }
-        } else {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(10.dp)
-                    .clip(RoundedCornerShape(5.dp))
-                    .background(SurfaceContainerHighest)
-            )
         }
 
         Spacer(Modifier.height(14.dp))
+
+        // Labels / Legend: always shows all 3 categories with hours/mins even when zero
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            LegendItem(
+                label = "Deep Work",
+                durationText = if (totalMinutes == 0) "0h" else deepText,
+                percent = if (totalMinutes == 0) 0 else (targetDeepWork * 100).toInt(),
+                color = SageGreen
+            )
+            LegendItem(
+                label = "Play",
+                durationText = if (totalMinutes == 0) "0h" else entText,
+                percent = if (totalMinutes == 0) 0 else (targetEnt * 100).toInt(),
+                color = SteelBlue
+            )
+            LegendItem(
+                label = "Rest",
+                durationText = if (totalMinutes == 0) "0h" else restText,
+                percent = if (totalMinutes == 0) 0 else (targetRest * 100).toInt(),
+                color = WarmSand
+            )
+        }
+
+        // Optional personal balance reference pace marker
+        Spacer(Modifier.height(12.dp))
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(8.dp))
+                .clickable { onOpenReferenceDialog() }
+                .padding(vertical = 4.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.Tune,
+                    contentDescription = null,
+                    tint = SteelBlue,
+                    modifier = Modifier.size(15.dp)
+                )
+                Text(
+                    text = if (weeklyReferenceHours != null) {
+                        "Your usual pace: ${weeklyReferenceHours}h/wk play"
+                    } else {
+                        "Set weekly play reference (optional)"
+                    },
+                    style = MaterialTheme.typography.labelSmall,
+                    color = OnSurfaceSubtle
+                )
+            }
+            if (weeklyReferenceHours != null) {
+                val entHoursCurrent = entertainmentMinutes / 60
+                val entMinsCurrent = entertainmentMinutes % 60
+                val curPace = if (entHoursCurrent > 0) "${entHoursCurrent}h ${entMinsCurrent}m" else "${entMinsCurrent}m"
+                Text(
+                    text = "$curPace logged",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = SteelBlue,
+                    fontWeight = FontWeight.Medium
+                )
+            }
+        }
+
+        Spacer(Modifier.height(10.dp))
 
         // Non-judgmental message banner
         Surface(
@@ -356,7 +546,7 @@ fun WeeklyBalanceCard(
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 Icon(
-                    imageVector = Icons.Default.Info,
+                    imageVector = Icons.Outlined.Spa,
                     contentDescription = null,
                     tint = SageGreen,
                     modifier = Modifier.size(16.dp)
@@ -369,6 +559,111 @@ fun WeeklyBalanceCard(
             }
         }
     }
+}
+
+@Composable
+fun DeepWorkInfoDialog(onDismiss: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(
+                text = "How Deep Work is calculated",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = OnSurface
+            )
+        },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(
+                    text = "Deep Work = completed Big 3 tasks + habit check-ins",
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    color = SageGreen
+                )
+                Text(
+                    text = "Each completed Big 3 task counts as ~90 minutes of focused effort, other tasks count as ~45 minutes, and completed habits count as ~20 minutes.\n\nThis provides an encouraging, realistic estimate of your weekly focus alongside your rest — without needing a stopwatch.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = OnSurfaceMuted
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Got it", color = SageGreen)
+            }
+        },
+        containerColor = SurfaceContainerHigh
+    )
+}
+
+@Composable
+fun WeeklyReferenceDialog(
+    currentHours: Int?,
+    onSave: (Int?) -> Unit,
+    onDismiss: () -> Unit
+) {
+    var textValue by remember { mutableStateOf(currentHours?.toString() ?: "") }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(
+                text = "Personal Weekly Reference",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = OnSurface
+            )
+        },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Text(
+                    text = "Set a gentle weekly target for entertainment & play time. This is purely a personal reference point — never a limit or budget.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = OnSurfaceMuted
+                )
+                OutlinedTextField(
+                    value = textValue,
+                    onValueChange = { input -> textValue = input.filter { it.isDigit() }.take(3) },
+                    label = { Text("Hours per week") },
+                    placeholder = { Text("e.g. 8") },
+                    modifier = Modifier.fillMaxWidth(),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = SageGreen,
+                        unfocusedBorderColor = SurfaceContainerHighest,
+                        focusedLabelColor = SageGreen,
+                        cursorColor = SageGreen
+                    ),
+                    singleLine = true
+                )
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    val parsed = textValue.toIntOrNull()
+                    onSave(if (parsed != null && parsed > 0) parsed else null)
+                    onDismiss()
+                },
+                colors = ButtonDefaults.buttonColors(containerColor = SageGreen, contentColor = Background)
+            ) {
+                Text("Save")
+            }
+        },
+        dismissButton = {
+            TextButton(
+                onClick = {
+                    onSave(null)
+                    onDismiss()
+                }
+            ) {
+                Text("Clear", color = OnSurfaceSubtle)
+            }
+        },
+        containerColor = SurfaceContainerHigh
+    )
 }
 
 @Composable
@@ -562,13 +857,36 @@ fun LogItemRow(
                     )
                 }
 
-                Column {
-                    Text(
-                        text = log.category.label,
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.SemiBold,
-                        color = OnSurface
-                    )
+                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Text(
+                            text = log.category.label,
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.SemiBold,
+                            color = OnSurface
+                        )
+                        if (log.isIntentional != null) {
+                            val tagLabel = if (log.isIntentional) "Intentional" else "Not sure"
+                            val tagColor = if (log.isIntentional) SageGreen else SteelBlue
+                            val tagBg = if (log.isIntentional) SageGreenContainer else SteelBlue.copy(alpha = 0.2f)
+                            Box(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(4.dp))
+                                    .background(tagBg)
+                                    .padding(horizontal = 5.dp, vertical = 1.dp)
+                            ) {
+                                Text(
+                                    text = tagLabel,
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = tagColor,
+                                    fontSize = 10.sp
+                                )
+                            }
+                        }
+                    }
                     if (!log.note.isNullOrBlank()) {
                         Text(
                             text = log.note,

@@ -28,7 +28,7 @@ public class AppSettingsDao_Impl(
     this.__db = __db
     this.__insertAdapterOfAppSettingsEntity = object : EntityInsertAdapter<AppSettingsEntity>() {
       protected override fun createQuery(): String =
-          "INSERT OR REPLACE INTO `app_settings` (`id`,`isOnboardingCompleted`,`isEveningReminderEnabled`,`eveningReminderHour`,`eveningReminderMinute`) VALUES (?,?,?,?,?)"
+          "INSERT OR REPLACE INTO `app_settings` (`id`,`isOnboardingCompleted`,`isEveningReminderEnabled`,`eveningReminderHour`,`eveningReminderMinute`,`weeklyPlayReferenceHours`) VALUES (?,?,?,?,?,?)"
 
       protected override fun bind(statement: SQLiteStatement, entity: AppSettingsEntity) {
         statement.bindLong(1, entity.id.toLong())
@@ -38,6 +38,12 @@ public class AppSettingsDao_Impl(
         statement.bindLong(3, _tmp_1.toLong())
         statement.bindLong(4, entity.eveningReminderHour.toLong())
         statement.bindLong(5, entity.eveningReminderMinute.toLong())
+        val _tmpWeeklyPlayReferenceHours: Int? = entity.weeklyPlayReferenceHours
+        if (_tmpWeeklyPlayReferenceHours == null) {
+          statement.bindNull(6)
+        } else {
+          statement.bindLong(6, _tmpWeeklyPlayReferenceHours.toLong())
+        }
       }
     }
   }
@@ -61,6 +67,8 @@ public class AppSettingsDao_Impl(
             "eveningReminderHour")
         val _columnIndexOfEveningReminderMinute: Int = getColumnIndexOrThrow(_stmt,
             "eveningReminderMinute")
+        val _columnIndexOfWeeklyPlayReferenceHours: Int = getColumnIndexOrThrow(_stmt,
+            "weeklyPlayReferenceHours")
         val _result: AppSettingsEntity?
         if (_stmt.step()) {
           val _tmpId: Int
@@ -77,8 +85,15 @@ public class AppSettingsDao_Impl(
           _tmpEveningReminderHour = _stmt.getLong(_columnIndexOfEveningReminderHour).toInt()
           val _tmpEveningReminderMinute: Int
           _tmpEveningReminderMinute = _stmt.getLong(_columnIndexOfEveningReminderMinute).toInt()
+          val _tmpWeeklyPlayReferenceHours: Int?
+          if (_stmt.isNull(_columnIndexOfWeeklyPlayReferenceHours)) {
+            _tmpWeeklyPlayReferenceHours = null
+          } else {
+            _tmpWeeklyPlayReferenceHours =
+                _stmt.getLong(_columnIndexOfWeeklyPlayReferenceHours).toInt()
+          }
           _result =
-              AppSettingsEntity(_tmpId,_tmpIsOnboardingCompleted,_tmpIsEveningReminderEnabled,_tmpEveningReminderHour,_tmpEveningReminderMinute)
+              AppSettingsEntity(_tmpId,_tmpIsOnboardingCompleted,_tmpIsEveningReminderEnabled,_tmpEveningReminderHour,_tmpEveningReminderMinute,_tmpWeeklyPlayReferenceHours)
         } else {
           _result = null
         }
@@ -103,6 +118,8 @@ public class AppSettingsDao_Impl(
             "eveningReminderHour")
         val _columnIndexOfEveningReminderMinute: Int = getColumnIndexOrThrow(_stmt,
             "eveningReminderMinute")
+        val _columnIndexOfWeeklyPlayReferenceHours: Int = getColumnIndexOrThrow(_stmt,
+            "weeklyPlayReferenceHours")
         val _result: AppSettingsEntity?
         if (_stmt.step()) {
           val _tmpId: Int
@@ -119,8 +136,15 @@ public class AppSettingsDao_Impl(
           _tmpEveningReminderHour = _stmt.getLong(_columnIndexOfEveningReminderHour).toInt()
           val _tmpEveningReminderMinute: Int
           _tmpEveningReminderMinute = _stmt.getLong(_columnIndexOfEveningReminderMinute).toInt()
+          val _tmpWeeklyPlayReferenceHours: Int?
+          if (_stmt.isNull(_columnIndexOfWeeklyPlayReferenceHours)) {
+            _tmpWeeklyPlayReferenceHours = null
+          } else {
+            _tmpWeeklyPlayReferenceHours =
+                _stmt.getLong(_columnIndexOfWeeklyPlayReferenceHours).toInt()
+          }
           _result =
-              AppSettingsEntity(_tmpId,_tmpIsOnboardingCompleted,_tmpIsEveningReminderEnabled,_tmpEveningReminderHour,_tmpEveningReminderMinute)
+              AppSettingsEntity(_tmpId,_tmpIsOnboardingCompleted,_tmpIsEveningReminderEnabled,_tmpEveningReminderHour,_tmpEveningReminderMinute,_tmpWeeklyPlayReferenceHours)
         } else {
           _result = null
         }

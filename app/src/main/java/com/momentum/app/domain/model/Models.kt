@@ -112,7 +112,8 @@ data class EntertainmentLog(
     val date: LocalDate,
     val durationMinutes: Int,
     val note: String? = null,
-    val createdAt: Instant = Instant.now()
+    val createdAt: Instant = Instant.now(),
+    val isIntentional: Boolean? = null
 )
 
 /**
@@ -123,5 +124,6 @@ data class AppSettings(
     val isOnboardingCompleted: Boolean = false,
     val isEveningReminderEnabled: Boolean = true,
     val eveningReminderHour: Int = 21,
-    val eveningReminderMinute: Int = 0
+    val eveningReminderMinute: Int = 0,
+    val weeklyPlayReferenceHours: Int? = null
 )

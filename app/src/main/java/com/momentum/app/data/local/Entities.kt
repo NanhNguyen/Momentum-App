@@ -96,7 +96,8 @@ data class EntertainmentLogEntity(
     val dateEpochDay: Long,          // LocalDate.toEpochDay()
     val durationMinutes: Int,
     val note: String?,
-    val createdAtEpochMilli: Long    // Instant.toEpochMilli()
+    val createdAtEpochMilli: Long,   // Instant.toEpochMilli()
+    val isIntentional: Boolean? = null
 )
 
 /**
@@ -108,5 +109,6 @@ data class AppSettingsEntity(
     val isOnboardingCompleted: Boolean = false,
     val isEveningReminderEnabled: Boolean = true,
     val eveningReminderHour: Int = 21,
-    val eveningReminderMinute: Int = 0
+    val eveningReminderMinute: Int = 0,
+    val weeklyPlayReferenceHours: Int? = null
 )

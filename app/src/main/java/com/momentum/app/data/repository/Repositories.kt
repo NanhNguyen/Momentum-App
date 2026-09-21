@@ -233,6 +233,11 @@ class SettingsRepository @Inject constructor(private val dao: AppSettingsDao) {
             )
         )
     }
+
+    suspend fun updateWeeklyPlayReferenceHours(hours: Int?) {
+        val current = dao.getSettingsSync() ?: AppSettingsEntity()
+        dao.insertOrUpdateSettings(current.copy(weeklyPlayReferenceHours = hours))
+    }
 }
 
 /**
@@ -323,6 +328,9 @@ class BackupRepository @Inject constructor(
             obj.put("durationMinutes", e.durationMinutes)
             obj.put("note", e.note ?: "")
             obj.put("createdAtEpochMilli", e.createdAtEpochMilli)
+            if (e.isIntentional != null) {
+                obj.put("isIntentional", e.isIntentional)
+            }
             entArr.put(obj)
         }
         root.put("entertainmentLogs", entArr)
@@ -332,6 +340,9 @@ class BackupRepository @Inject constructor(
         setObj.put("isEveningReminderEnabled", settings.isEveningReminderEnabled)
         setObj.put("eveningReminderHour", settings.eveningReminderHour)
         setObj.put("eveningReminderMinute", settings.eveningReminderMinute)
+        if (settings.weeklyPlayReferenceHours != null) {
+            setObj.put("weeklyPlayReferenceHours", settings.weeklyPlayReferenceHours)
+        }
         root.put("settings", setObj)
 
         root.toString(2)
@@ -427,6 +438,9 @@ class BackupRepository @Inject constructor(
         if (entArr != null) {
             for (i in 0 until entArr.length()) {
                 val obj = entArr.getJSONObject(i)
+                val isIntentional = if (obj.has("isIntentional") && !obj.isNull("isIntentional")) {
+                    obj.getBoolean("isIntentional")
+                } else null
                 entList.add(
                     EntertainmentLogEntity(
                         id = obj.optLong("id", 0L),
@@ -434,7 +448,8 @@ class BackupRepository @Inject constructor(
                         dateEpochDay = obj.getLong("dateEpochDay"),
                         durationMinutes = obj.optInt("durationMinutes", 0),
                         note = obj.optString("note").ifBlank { null },
-                        createdAtEpochMilli = obj.optLong("createdAtEpochMilli", System.currentTimeMillis())
+                        createdAtEpochMilli = obj.optLong("createdAtEpochMilli", System.currentTimeMillis()),
+                        isIntentional = isIntentional
                     )
                 )
             }
@@ -442,12 +457,16 @@ class BackupRepository @Inject constructor(
 
         // Parse Settings
         val settingsEntity = root.optJSONObject("settings")?.let { setObj ->
+            val weeklyPlayRef = if (setObj.has("weeklyPlayReferenceHours") && !setObj.isNull("weeklyPlayReferenceHours")) {
+                setObj.getInt("weeklyPlayReferenceHours")
+            } else null
             AppSettingsEntity(
                 id = 1,
                 isOnboardingCompleted = setObj.optBoolean("isOnboardingCompleted", false),
                 isEveningReminderEnabled = setObj.optBoolean("isEveningReminderEnabled", true),
                 eveningReminderHour = setObj.optInt("eveningReminderHour", 21),
-                eveningReminderMinute = setObj.optInt("eveningReminderMinute", 0)
+                eveningReminderMinute = setObj.optInt("eveningReminderMinute", 0),
+                weeklyPlayReferenceHours = weeklyPlayRef
             )
         }
 

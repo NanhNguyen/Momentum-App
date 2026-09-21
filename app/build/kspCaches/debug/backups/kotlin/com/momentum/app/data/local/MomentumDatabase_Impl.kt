@@ -52,8 +52,8 @@ public class MomentumDatabase_Impl : MomentumDatabase() {
   }
 
   protected override fun createOpenDelegate(): RoomOpenDelegate {
-    val _openDelegate: RoomOpenDelegate = object : RoomOpenDelegate(3,
-        "1307f661f26a6d045cfa62111eae719e", "505fc910619e126ce520a41f33a03bb1") {
+    val _openDelegate: RoomOpenDelegate = object : RoomOpenDelegate(4,
+        "d7d6735fe93d006f2564a2228a61337d", "50bfacc32503b01da8de2269b0be05df") {
       public override fun createAllTables(connection: SQLiteConnection) {
         connection.execSQL("CREATE TABLE IF NOT EXISTS `tasks` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `title` TEXT NOT NULL, `description` TEXT, `dateEpochDay` INTEGER NOT NULL, `isBigThree` INTEGER NOT NULL, `isCompleted` INTEGER NOT NULL, `priority` INTEGER NOT NULL, `createdAtEpochMilli` INTEGER NOT NULL, `isRecurring` INTEGER NOT NULL, `recurrenceRule` TEXT)")
         connection.execSQL("CREATE INDEX IF NOT EXISTS `index_tasks_dateEpochDay` ON `tasks` (`dateEpochDay`)")
@@ -62,11 +62,11 @@ public class MomentumDatabase_Impl : MomentumDatabase() {
         connection.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS `index_habit_logs_habitId_dateEpochDay` ON `habit_logs` (`habitId`, `dateEpochDay`)")
         connection.execSQL("CREATE TABLE IF NOT EXISTS `reflections` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `dateEpochDay` INTEGER NOT NULL, `wentWell` TEXT, `distracted` TEXT, `improveTomorrow` TEXT, `mood` TEXT NOT NULL, `energyLevel` INTEGER NOT NULL)")
         connection.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS `index_reflections_dateEpochDay` ON `reflections` (`dateEpochDay`)")
-        connection.execSQL("CREATE TABLE IF NOT EXISTS `entertainment_logs` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `category` TEXT NOT NULL, `dateEpochDay` INTEGER NOT NULL, `durationMinutes` INTEGER NOT NULL, `note` TEXT, `createdAtEpochMilli` INTEGER NOT NULL)")
+        connection.execSQL("CREATE TABLE IF NOT EXISTS `entertainment_logs` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `category` TEXT NOT NULL, `dateEpochDay` INTEGER NOT NULL, `durationMinutes` INTEGER NOT NULL, `note` TEXT, `createdAtEpochMilli` INTEGER NOT NULL, `isIntentional` INTEGER)")
         connection.execSQL("CREATE INDEX IF NOT EXISTS `index_entertainment_logs_dateEpochDay` ON `entertainment_logs` (`dateEpochDay`)")
-        connection.execSQL("CREATE TABLE IF NOT EXISTS `app_settings` (`id` INTEGER NOT NULL, `isOnboardingCompleted` INTEGER NOT NULL, `isEveningReminderEnabled` INTEGER NOT NULL, `eveningReminderHour` INTEGER NOT NULL, `eveningReminderMinute` INTEGER NOT NULL, PRIMARY KEY(`id`))")
+        connection.execSQL("CREATE TABLE IF NOT EXISTS `app_settings` (`id` INTEGER NOT NULL, `isOnboardingCompleted` INTEGER NOT NULL, `isEveningReminderEnabled` INTEGER NOT NULL, `eveningReminderHour` INTEGER NOT NULL, `eveningReminderMinute` INTEGER NOT NULL, `weeklyPlayReferenceHours` INTEGER, PRIMARY KEY(`id`))")
         connection.execSQL("CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)")
-        connection.execSQL("INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '1307f661f26a6d045cfa62111eae719e')")
+        connection.execSQL("INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'd7d6735fe93d006f2564a2228a61337d')")
       }
 
       public override fun dropAllTables(connection: SQLiteConnection) {
@@ -228,6 +228,8 @@ public class MomentumDatabase_Impl : MomentumDatabase() {
             TableInfo.CREATED_FROM_ENTITY))
         _columnsEntertainmentLogs.put("createdAtEpochMilli", TableInfo.Column("createdAtEpochMilli",
             "INTEGER", true, 0, null, TableInfo.CREATED_FROM_ENTITY))
+        _columnsEntertainmentLogs.put("isIntentional", TableInfo.Column("isIntentional", "INTEGER",
+            false, 0, null, TableInfo.CREATED_FROM_ENTITY))
         val _foreignKeysEntertainmentLogs: MutableSet<TableInfo.ForeignKey> = mutableSetOf()
         val _indicesEntertainmentLogs: MutableSet<TableInfo.Index> = mutableSetOf()
         _indicesEntertainmentLogs.add(TableInfo.Index("index_entertainment_logs_dateEpochDay",
@@ -256,6 +258,9 @@ public class MomentumDatabase_Impl : MomentumDatabase() {
             "INTEGER", true, 0, null, TableInfo.CREATED_FROM_ENTITY))
         _columnsAppSettings.put("eveningReminderMinute", TableInfo.Column("eveningReminderMinute",
             "INTEGER", true, 0, null, TableInfo.CREATED_FROM_ENTITY))
+        _columnsAppSettings.put("weeklyPlayReferenceHours",
+            TableInfo.Column("weeklyPlayReferenceHours", "INTEGER", false, 0, null,
+            TableInfo.CREATED_FROM_ENTITY))
         val _foreignKeysAppSettings: MutableSet<TableInfo.ForeignKey> = mutableSetOf()
         val _indicesAppSettings: MutableSet<TableInfo.Index> = mutableSetOf()
         val _infoAppSettings: TableInfo = TableInfo("app_settings", _columnsAppSettings,
