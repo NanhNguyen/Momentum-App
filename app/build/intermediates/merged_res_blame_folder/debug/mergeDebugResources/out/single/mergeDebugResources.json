@@ -1,14 +1,26 @@
 [
     {
-        "merged": "com.momentum.app-debug-62:/mipmap-anydpi-v26_ic_launcher.xml.flat",
-        "source": "com.momentum.app-main-64:/mipmap-anydpi-v26/ic_launcher.xml"
+        "merged": "/Users/namanhnguyen/.gradle/daemon/8.13/com.momentum.app-debug-62:/mipmap-anydpi-v26_ic_launcher_round.xml.flat",
+        "source": "/Users/namanhnguyen/.gradle/daemon/8.13/com.momentum.app-main-64:/mipmap-anydpi-v26/ic_launcher_round.xml"
     },
     {
-        "merged": "com.momentum.app-debug-62:/drawable_ic_launcher_foreground.xml.flat",
-        "source": "com.momentum.app-main-64:/drawable/ic_launcher_foreground.xml"
+        "merged": "/Users/namanhnguyen/.gradle/daemon/8.13/com.momentum.app-debug-62:/drawable_ic_launcher_foreground.xml.flat",
+        "source": "/Users/namanhnguyen/.gradle/daemon/8.13/com.momentum.app-main-64:/drawable/ic_launcher_foreground.xml"
     },
     {
-        "merged": "com.momentum.app-debug-62:/mipmap-anydpi-v26_ic_launcher_round.xml.flat",
-        "source": "com.momentum.app-main-64:/mipmap-anydpi-v26/ic_launcher_round.xml"
+        "merged": "/Users/namanhnguyen/.gradle/daemon/8.13/com.momentum.app-debug-62:/drawable_momentum_logo.jpg.flat",
+        "source": "/Users/namanhnguyen/.gradle/daemon/8.13/com.momentum.app-main-64:/drawable/momentum_logo.jpg"
+    },
+    {
+        "merged": "/Users/namanhnguyen/.gradle/daemon/8.13/com.momentum.app-debug-62:/drawable_momentum_hero.jpg.flat",
+        "source": "/Users/namanhnguyen/.gradle/daemon/8.13/com.momentum.app-main-64:/drawable/momentum_hero.jpg"
+    },
+    {
+        "merged": "/Users/namanhnguyen/.gradle/daemon/8.13/com.momentum.app-debug-62:/mipmap-anydpi-v26_ic_launcher.xml.flat",
+        "source": "/Users/namanhnguyen/.gradle/daemon/8.13/com.momentum.app-main-64:/mipmap-anydpi-v26/ic_launcher.xml"
+    },
+    {
+        "merged": "com.momentum.app-debug-62:/drawable_transparent_icon.xml.flat",
+        "source": "com.momentum.app-main-64:/drawable/transparent_icon.xml"
     }
 ]

@@ -32,6 +32,10 @@ import javax.inject.Inject
 import android.content.Intent
 import kotlinx.coroutines.flow.MutableStateFlow
 
+import androidx.compose.animation.Crossfade
+import androidx.compose.animation.core.tween
+import com.momentum.app.ui.splash.SplashScreen
+
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     @Inject
@@ -47,14 +51,27 @@ class MainActivity : ComponentActivity() {
             MomentumTheme {
                 val settings by settingsRepository.getSettings().collectAsState(initial = null)
                 val explicitTarget by targetRoute.collectAsState()
+                var showSplash by remember { mutableStateOf(true) }
 
-                if (settings != null) {
-                    val startRoute = when {
-                        explicitTarget != null -> explicitTarget!!
-                        settings!!.isOnboardingCompleted -> AppRoutes.TODAY
-                        else -> AppRoutes.ONBOARDING
+                Crossfade(
+                    targetState = showSplash || settings == null,
+                    animationSpec = tween(500),
+                    label = "splash_crossfade"
+                ) { isSplashActive ->
+                    if (isSplashActive) {
+                        SplashScreen(
+                            onSplashFinished = {
+                                showSplash = false
+                            }
+                        )
+                    } else {
+                        val startRoute = when {
+                            explicitTarget != null -> explicitTarget!!
+                            settings?.isOnboardingCompleted == true -> AppRoutes.TODAY
+                            else -> AppRoutes.ONBOARDING
+                        }
+                        MomentumAppContent(startDestination = startRoute)
                     }
-                    MomentumAppContent(startDestination = startRoute)
                 }
             }
         }

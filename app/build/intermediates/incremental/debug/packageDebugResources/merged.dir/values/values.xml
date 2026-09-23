@@ -2,8 +2,9 @@
 <resources>
     <color name="ic_launcher_background">#1A1C1E</color>
     <string name="app_name">Momentum</string>
-    <style name="Theme.Momentum" parent="android:Theme.Material.Light.NoActionBar">
+    <style name="Theme.Momentum" parent="android:Theme.Material.NoActionBar">
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:windowBackground">#1A1C1E</item>
     </style>
 </resources>
